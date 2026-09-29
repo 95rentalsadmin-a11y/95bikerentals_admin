@@ -5,7 +5,7 @@ import { getAllBikes, createBike, updateBike, updateBikeAvailability, uploadBike
 import { Bike } from '../types';
 
 const getImageUrl = (path: string) => {
-  if (path.startsWith('/uploads/')) {
+  if (path.startsWith('/uploads/') || path.startsWith('/api/')) {
     return `${API_URL.replace('/api', '')}${path}`;
   }
   return path;
