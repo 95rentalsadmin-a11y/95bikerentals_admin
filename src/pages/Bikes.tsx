@@ -4,7 +4,18 @@ import Modal from '../components/Modal';
 import { getAllBikes, createBike, updateBike, updateBikeAvailability, uploadBikeImage, API_URL } from '../services/api';
 import { Bike } from '../types';
 
-const getImageUrl = (path: string) => {
+const defaultBikeImages: Record<string, string> = {
+  'Honda Shine 100 BS6': '/images/shine_100.jpg',
+  'Honda Activa BS6': '/images/activa_6g.png',
+  'Yamaha Fascino BS6': '/images/fascino.jpeg',
+  'Hero Destini BS6 Xtec': '/images/destini.jpeg',
+  'Aether 450X': '/images/aether.jpeg',
+};
+
+const getImageUrl = (path: string, bikeName?: string) => {
+  if (path === '/images/placeholder.jpg' && bikeName && defaultBikeImages[bikeName]) {
+    return defaultBikeImages[bikeName];
+  }
   if (path.startsWith('/uploads/') || path.startsWith('/api/')) {
     return `${API_URL.replace('/api', '')}${path}`;
   }
@@ -163,7 +174,7 @@ const Bikes: React.FC = () => {
           <div key={bike.id} className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
             <div className="h-40 bg-slate-100 flex items-center justify-center overflow-hidden relative">
               <img
-                src={getImageUrl(bike.image)}
+                src={getImageUrl(bike.image, bike.name)}
                 alt={bike.name}
                 className="h-full w-full object-cover relative z-10"
                 onError={(e) => {

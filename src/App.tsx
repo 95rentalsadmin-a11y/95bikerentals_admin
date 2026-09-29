@@ -10,6 +10,7 @@ import Accessories from './pages/Accessories';
 import Coupons from './pages/Coupons';
 import Customers from './pages/Customers';
 import NotFound from './pages/NotFound';
+import DepositSettings from './pages/DepositSettings';
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
           <Route path="accessories" element={<Accessories />} />
           <Route path="coupons" element={<Coupons />} />
           <Route path="customers" element={<Customers />} />
+          <Route path="deposit-settings" element={<DepositSettings />} />
         </Route>
         <Route path="/404" element={<NotFound />} />
         <Route path="*" element={<Navigate to="/404" replace />} />

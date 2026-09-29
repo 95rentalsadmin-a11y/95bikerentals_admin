@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { FaTachometerAlt, FaClipboardList, FaBicycle, FaUsers, FaSignOutAlt, FaTags, FaPlus } from 'react-icons/fa';
+import { FaTachometerAlt, FaClipboardList, FaBicycle, FaUsers, FaSignOutAlt, FaTags, FaPlus, FaMoneyBillWave } from 'react-icons/fa';
 
 interface SidebarProps {
   onLogout: () => void;
@@ -14,6 +14,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
     { to: '/accessories', icon: FaPlus, label: 'Accessories' },
     { to: '/coupons', icon: FaTags, label: 'Coupons' },
     { to: '/customers', icon: FaUsers, label: 'Customers' },
+    { to: '/deposit-settings', icon: FaMoneyBillWave, label: 'Deposit Settings' },
   ];
 
   return (

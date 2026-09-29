@@ -31,6 +31,14 @@ export const loginAdmin = (username: string, password: string) =>
 
 export const getDashboardStats = () => request<DashboardStats>('/admin/dashboard');
 
+export const getSecurityDeposit = () => request<{ securityDeposit: number }>('/admin/settings/security-deposit');
+
+export const updateSecurityDeposit = (securityDeposit: number) =>
+  request<{ securityDeposit: number }>('/admin/settings/security-deposit', {
+    method: 'PATCH',
+    body: JSON.stringify({ securityDeposit }),
+  });
+
 export interface PaginatedBookings {
   bookings: Booking[];
   pagination: {
@@ -155,6 +163,12 @@ export const updateBookingStatus = (id: string, status: string) =>
   request<Booking>(`/admin/bookings/${id}/status`, {
     method: 'PATCH',
     body: JSON.stringify({ status }),
+  });
+
+export const updateBookingDeposit = (id: string, securityDeposit: number) =>
+  request<Booking>(`/admin/bookings/${id}/deposit`, {
+    method: 'PATCH',
+    body: JSON.stringify({ securityDeposit }),
   });
 
 export const returnBike = (id: string, actualReturnDate: string, actualReturnTime: string) =>

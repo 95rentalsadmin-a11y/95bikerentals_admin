@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { FaEye, FaCheck, FaTimes, FaClock, FaCalendarAlt, FaUser, FaPhone, FaEnvelope, FaMapMarkerAlt, FaIdCard, FaRupeeSign, FaDownload, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import Modal from '../components/Modal';
-import { getAllBookings, updateBookingStatus, downloadBookingIdProof, exportBookingsCsv, PaginationInfo } from '../services/api';
+import { getAllBookings, updateBookingStatus, updateBookingDeposit, downloadBookingIdProof, exportBookingsCsv, PaginationInfo } from '../services/api';
 import { Booking } from '../types';
 
 const statusBadge = (status: string) => {
@@ -47,6 +47,8 @@ const Bookings: React.FC = () => {
   const [pagination, setPagination] = useState<PaginationInfo | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [exporting, setExporting] = useState(false);
+  const [depositDraft, setDepositDraft] = useState('');
+  const [savingDeposit, setSavingDeposit] = useState(false);
 
   const fetchBookings = useCallback(async (page: number) => {
     setLoading(true);
@@ -88,8 +90,31 @@ const Bookings: React.FC = () => {
     }
   };
 
-  const openModal = (booking: Booking) => setSelectedBooking(booking);
+  const openModal = (booking: Booking) => {
+    setSelectedBooking(booking);
+    setDepositDraft(String(booking.securityDeposit || 0));
+  };
   const closeModal = () => setSelectedBooking(null);
+  const saveDeposit = async () => {
+    if (!selectedBooking) return;
+    const securityDeposit = Number(depositDraft);
+    if (!Number.isInteger(securityDeposit) || securityDeposit < 0) {
+      alert('Deposit must be a non-negative whole number');
+      return;
+    }
+
+    setSavingDeposit(true);
+    try {
+      const booking = await updateBookingDeposit(selectedBooking.id, securityDeposit);
+      setBookings((prev) => prev.map((item) => (item.id === booking.id ? booking : item)));
+      setSelectedBooking(booking);
+      setDepositDraft(String(booking.securityDeposit));
+    } catch (err: any) {
+      alert(err.message || 'Failed to update deposit');
+    } finally {
+      setSavingDeposit(false);
+    }
+  };
   const openIdProof = async (id: string) => {
     try {
       const blob = await downloadBookingIdProof(id);
@@ -393,6 +418,28 @@ const Bookings: React.FC = () => {
                   <span className="ml-2 text-xs text-slate-500">+ ₹{selectedBooking.securityDeposit || 0} deposit</span>
                 </p>
               </div>
+            </div>
+
+            <div className="flex items-end gap-3 p-3 bg-slate-50 rounded-lg">
+              <label className="flex-1">
+                <span className="text-xs text-slate-500">Security Deposit (₹)</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={depositDraft}
+                  onChange={(e) => setDepositDraft(e.target.value)}
+                  className="mt-1 w-full px-3 py-2 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-turquoise-blue"
+                />
+              </label>
+              <button
+                type="button"
+                onClick={saveDeposit}
+                disabled={savingDeposit}
+                className="px-4 py-2 bg-turquoise-blue text-white rounded-lg text-sm font-medium hover:opacity-90 disabled:opacity-50"
+              >
+                {savingDeposit ? 'Saving...' : 'Save Deposit'}
+              </button>
             </div>
 
             <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
