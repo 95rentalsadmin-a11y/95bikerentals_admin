@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { FaBell, FaUserCircle, FaCog, FaSignOutAlt, FaUser, FaEnvelope, FaPhone, FaShieldAlt, FaMoon, FaToggleOn, FaToggleOff } from 'react-icons/fa';
+import { FaBell, FaUserCircle, FaCog, FaSignOutAlt, FaUser, FaEnvelope, FaPhone, FaShieldAlt, FaToggleOn, FaToggleOff } from 'react-icons/fa';
 import Modal from './Modal';
 
 const titleMap: Record<string, string> = {
@@ -25,13 +25,9 @@ const Header: React.FC = () => {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [activeModal, setActiveModal] = useState<'profile' | 'settings' | null>(null);
-  const [darkMode, setDarkMode] = useState(false);
-  const [emailNotifications, setEmailNotifications] = useState(true);
-  const [notifications, setNotifications] = useState<Notification[]>([
-    { id: '1', message: 'New booking #B-1024 received', time: '2 min ago', read: false },
-    { id: '2', message: 'Bike Aether 450X is now unavailable', time: '1 hour ago', read: false },
-    { id: '3', message: 'Customer Rahul Sharma updated profile', time: '3 hours ago', read: true },
-  ]);
+  const [emailNotifications, setEmailNotifications] = useState(() => localStorage.getItem('adminEmailNotifications') !== 'false');
+  const [notifications] = useState<Notification[]>([]);
+  const adminUser = JSON.parse(localStorage.getItem('adminUser') || '{"username":"Admin","role":"admin"}');
 
   const notifRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -51,12 +47,9 @@ const Header: React.FC = () => {
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const markAsRead = (id: string) => {
-    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
-  };
-
   const handleLogout = () => {
     localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminUser');
     navigate('/login');
   };
 
@@ -90,7 +83,7 @@ const Header: React.FC = () => {
                   notifications.map((notification) => (
                     <button
                       key={notification.id}
-                      onClick={() => markAsRead(notification.id)}
+                      onClick={() => undefined}
                       className={`w-full text-left px-4 py-3 hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-0 ${
                         notification.read ? 'opacity-70' : 'bg-turquoise-blue/5'
                       }`}
@@ -112,13 +105,13 @@ const Header: React.FC = () => {
             className="flex items-center gap-2 text-sm text-slate-700 hover:text-slate-900 transition-colors"
           >
             <FaUserCircle className="text-2xl text-slate-400" />
-            <span className="font-medium">Admin</span>
+            <span className="font-medium">{adminUser.username}</span>
           </button>
           {profileOpen && (
             <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden animate-fadeIn">
               <div className="px-4 py-3 border-b border-slate-100 bg-slate-50">
-                <p className="text-sm font-semibold text-slate-800">Admin User</p>
-                <p className="text-xs text-slate-500">admin@95bikerentals.com</p>
+                <p className="text-sm font-semibold text-slate-800">{adminUser.username}</p>
+                <p className="text-xs text-slate-500">{adminUser.role}</p>
               </div>
               <div className="py-1">
                 <button
@@ -160,26 +153,26 @@ const Header: React.FC = () => {
         onClose={() => setActiveModal(null)}
         title="Admin Profile"
       >
-        <div className="flex flex-col items-center text-center mb-6">
+          <div className="flex flex-col items-center text-center mb-6">
           <div className="w-20 h-20 bg-turquoise-blue rounded-full flex items-center justify-center text-white text-3xl mb-3">
             <FaUser />
           </div>
-          <h3 className="text-lg font-semibold text-slate-800">Admin User</h3>
-          <p className="text-sm text-slate-500">Super Admin</p>
+          <h3 className="text-lg font-semibold text-slate-800">{adminUser.username}</h3>
+          <p className="text-sm text-slate-500">{adminUser.role}</p>
         </div>
         <div className="space-y-3">
           <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
             <FaEnvelope className="text-turquoise-blue" />
             <div className="text-left">
               <p className="text-xs text-slate-500">Email</p>
-              <p className="text-sm font-medium text-slate-800">admin@95bikerentals.com</p>
+              <p className="text-sm font-medium text-slate-800">{adminUser.username}</p>
             </div>
           </div>
           <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
             <FaPhone className="text-turquoise-blue" />
             <div className="text-left">
               <p className="text-xs text-slate-500">Phone</p>
-              <p className="text-sm font-medium text-slate-800">+91 98765 43210</p>
+              <p className="text-sm font-medium text-slate-800">Configured through the admin account</p>
             </div>
           </div>
           <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
@@ -207,21 +200,6 @@ const Header: React.FC = () => {
         <div className="space-y-5">
           <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
             <div className="flex items-center gap-3">
-              <FaMoon className="text-turquoise-blue" />
-              <div>
-                <p className="text-sm font-medium text-slate-800">Dark Mode</p>
-                <p className="text-xs text-slate-500">Coming soon</p>
-              </div>
-            </div>
-            <button
-              onClick={() => setDarkMode((prev) => !prev)}
-              className={`text-2xl transition-colors ${darkMode ? 'text-turquoise-blue' : 'text-slate-300'}`}
-            >
-              {darkMode ? <FaToggleOn /> : <FaToggleOff />}
-            </button>
-          </div>
-          <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-            <div className="flex items-center gap-3">
               <FaBell className="text-turquoise-blue" />
               <div>
                 <p className="text-sm font-medium text-slate-800">Email Notifications</p>
@@ -229,7 +207,11 @@ const Header: React.FC = () => {
               </div>
             </div>
             <button
-              onClick={() => setEmailNotifications((prev) => !prev)}
+              onClick={() => setEmailNotifications((prev) => {
+                const next = !prev;
+                localStorage.setItem('adminEmailNotifications', String(next));
+                return next;
+              })}
               className={`text-2xl transition-colors ${emailNotifications ? 'text-turquoise-blue' : 'text-slate-300'}`}
             >
               {emailNotifications ? <FaToggleOn /> : <FaToggleOff />}

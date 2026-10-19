@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaClipboardList, FaBicycle, FaDollarSign, FaUserCheck, FaCreditCard, FaCheckCircle } from 'react-icons/fa';
 import StatCard from '../components/StatCard';
-import { getDashboardStats } from '../services/api';
+import { exportBookingsCsv, getDashboardStats } from '../services/api';
 import { DashboardStats } from '../types';
 
 const defaultStats: DashboardStats = {
@@ -14,6 +14,7 @@ const defaultStats: DashboardStats = {
   pendingBookings: 0,
   pendingPayments: 0,
   paidBookings: 0,
+  recentActivity: [],
 };
 
 const Dashboard: React.FC = () => {
@@ -21,6 +22,20 @@ const Dashboard: React.FC = () => {
   const [stats, setStats] = useState<DashboardStats>(defaultStats);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  const generateReport = async () => {
+    try {
+      const blob = await exportBookingsCsv();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `bookings-${new Date().toISOString().slice(0, 10)}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (err: any) {
+      setError(err.message || 'Failed to generate report');
+    }
+  };
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -74,17 +89,16 @@ const Dashboard: React.FC = () => {
         <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
           <h3 className="text-lg font-semibold text-slate-800 mb-4">Recent Activity</h3>
           <div className="space-y-4">
-            {[
-              { text: 'New booking #B-1024 for Honda Activa', time: '2 min ago', color: 'bg-turquoise-blue' },
-              { text: 'Booking #B-1018 marked as completed', time: '1 hour ago', color: 'bg-mint-green' },
-              { text: 'Yamaha Fascino returned late', time: '3 hours ago', color: 'bg-orange' },
-              { text: 'Admin added a new bike Aether 450X', time: 'Yesterday', color: 'bg-sky-blue' },
-            ].map((item, idx) => (
-              <div key={idx} className="flex items-start gap-3">
-                <span className={`w-2 h-2 mt-2 rounded-full ${item.color}`} />
+            {stats.recentActivity.length === 0 ? (
+              <p className="text-sm text-slate-500">No booking activity yet.</p>
+            ) : stats.recentActivity.map((item) => (
+              <div key={`${item.id}-${item.updatedAt}`} className="flex items-start gap-3">
+                <span className="w-2 h-2 mt-2 rounded-full bg-turquoise-blue" />
                 <div>
-                  <p className="text-sm text-slate-700">{item.text}</p>
-                  <p className="text-xs text-slate-400">{item.time}</p>
+                  <p className="text-sm text-slate-700">
+                    {item.bike.name} booking for {item.customerName} is {item.status}.
+                  </p>
+                  <p className="text-xs text-slate-400">{new Date(item.updatedAt).toLocaleString()}</p>
                 </div>
               </div>
             ))}
@@ -107,7 +121,7 @@ const Dashboard: React.FC = () => {
               View Pending Bookings
             </button>
             <button
-              onClick={() => alert('Report generation will be available after backend integration.')}
+              onClick={generateReport}
               className="p-4 text-sm font-medium text-slate-700 bg-slate-50 hover:bg-turquoise-blue hover:text-white rounded-lg transition-colors text-left"
             >
               Generate Report

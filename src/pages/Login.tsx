@@ -17,6 +17,7 @@ const Login: React.FC = () => {
     try {
       const res = await loginAdmin(username, password);
       localStorage.setItem('adminToken', res.token);
+      localStorage.setItem('adminUser', JSON.stringify(res.user));
       navigate('/');
     } catch (err: any) {
       setError(err.message || 'Invalid credentials. Try admin / admin');

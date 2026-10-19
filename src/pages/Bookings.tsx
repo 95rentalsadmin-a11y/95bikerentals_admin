@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { FaEye, FaCheck, FaTimes, FaClock, FaCalendarAlt, FaUser, FaPhone, FaEnvelope, FaMapMarkerAlt, FaIdCard, FaRupeeSign, FaDownload, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import Modal from '../components/Modal';
-import { getAllBookings, updateBookingStatus, downloadBookingIdProof, exportBookingsCsv, PaginationInfo } from '../services/api';
+import { getAllBookings, updateBookingStatus, returnBike, downloadBookingIdProof, exportBookingsCsv, PaginationInfo } from '../services/api';
 import { Booking } from '../types';
 
 const statusBadge = (status: string) => {
@@ -85,6 +85,22 @@ const Bookings: React.FC = () => {
       }
     } catch (err: any) {
       alert(err.message || 'Failed to update status');
+    }
+  };
+
+  const markReturned = async (booking: Booking) => {
+    const now = new Date();
+    const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const hours = now.getHours();
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const period = hours >= 12 ? 'PM' : 'AM';
+    const displayHour = hours % 12 || 12;
+    try {
+      const result = await returnBike(booking.id, date, `${displayHour}:${minutes} ${period}`);
+      setSelectedBooking(result.booking);
+      await fetchBookings(currentPage);
+    } catch (err: any) {
+      alert(err.message || 'Failed to mark bike returned');
     }
   };
 
@@ -406,6 +422,14 @@ const Bookings: React.FC = () => {
               </div>
             </div>
 
+            {(selectedBooking.lateReturnCharge || selectedBooking.depositRefundAmount !== undefined) && (
+              <div className="p-3 bg-slate-50 rounded-lg text-sm space-y-1">
+                <p className="font-medium text-slate-800">Return settlement</p>
+                <p className="text-slate-600">Late fee: ₹{selectedBooking.lateReturnCharge || 0} ({selectedBooking.lateFeeStatus || 'none'})</p>
+                <p className="text-slate-600">Deposit refund: ₹{selectedBooking.depositRefundAmount || 0} ({selectedBooking.depositStatus || 'held'})</p>
+              </div>
+            )}
+
             {selectedBooking.idProofFilePath && (
               <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
                 <FaIdCard className="mt-1 text-turquoise-blue" />
@@ -442,6 +466,13 @@ const Bookings: React.FC = () => {
                 className="flex-1 py-2 bg-hot-pink hover:bg-pink-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Cancel
+              </button>
+              <button
+                onClick={() => markReturned(selectedBooking)}
+                disabled={selectedBooking.status === 'cancelled' || selectedBooking.status === 'completed'}
+                className="flex-1 py-2 bg-slate-700 hover:bg-slate-900 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Mark Returned
               </button>
             </div>
           </div>

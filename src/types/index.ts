@@ -43,6 +43,14 @@ export interface Booking {
   paymentMethod?: string | null;
   razorpayOrderId?: string | null;
   razorpayPaymentId?: string | null;
+  refundStatus?: 'none' | 'pending' | 'processed' | 'not_eligible' | 'failed';
+  refundAmount?: number;
+  razorpayRefundId?: string | null;
+  refundedAt?: string | null;
+  lateReturnCharge?: number;
+  lateFeeStatus?: 'none' | 'due' | 'settled';
+  depositStatus?: 'held' | 'refunded' | 'applied';
+  depositRefundAmount?: number;
   createdAt: string;
   updatedAt?: string;
 }
@@ -56,6 +64,14 @@ export interface DashboardStats {
   pendingBookings: number;
   pendingPayments: number;
   paidBookings: number;
+  recentActivity: {
+    id: string;
+    status: string;
+    paymentStatus: string;
+    updatedAt: string;
+    customerName: string;
+    bike: { name: string };
+  }[];
 }
 
 export interface CustomerHistory {
